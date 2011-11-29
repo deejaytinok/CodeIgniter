@@ -149,8 +149,7 @@ class CI_DB_sqlrelay_driver extends CI_DB {
      * Constructor
      *
      */
-    function CI_DB_sqlrelay_driver($params) {
-//    function __construct() {
+    function __construct( $params ) {
 
         $this->clean();
         $this->setIsOracle(false);
@@ -162,7 +161,7 @@ class CI_DB_sqlrelay_driver extends CI_DB {
           $this->_bgetNullsAsNulls = true;
         }
         
-        parent::CI_DB_driver($params);
+        parent::__construct($params);
         //$this->setAutoCommitOn();
     }
     

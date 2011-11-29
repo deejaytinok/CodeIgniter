@@ -75,7 +75,7 @@ class CI_DB_oci10_driver extends CI_DB {
 	
 	var $_iDefaultType = false ;
 
-	function CI_DB_oci10_driver ($params) {
+	function __construct($params) {
 		
 		$this->clean() ;
 		if( defined('SQLT_RSET') ) {
@@ -96,7 +96,7 @@ class CI_DB_oci10_driver extends CI_DB {
 			$this->_iDefaultType = 1 ;
 		}
 		
-		parent::CI_DB_driver($params);
+		parent::__construct($params);
 	}
 	
 	/**
