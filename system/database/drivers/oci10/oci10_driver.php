@@ -367,7 +367,7 @@ class CI_DB_oci10_driver extends CI_DB {
 	 */
 	function _error_message()
 	{
-		$error = ocierror($this->conn_id);
+		$error = ocierror($this->stmt_id);
 		return $error['message'];
 	}
 
@@ -381,7 +381,7 @@ class CI_DB_oci10_driver extends CI_DB {
 	 */
 	function _error_number()
 	{
-		$error = ocierror($this->conn_id);
+		$error = ocierror($this->stmt_id);
 		return $error['code'];
 	}
 
