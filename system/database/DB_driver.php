@@ -218,7 +218,7 @@ class CI_DB_driver {
 
 		// Some DBs have functions that return the version, and don't run special
 		// SQL queries per se. In these instances, just return the result.
-		$driver_version_exceptions = array('oci8', 'sqlite', 'cubrid');
+		$driver_version_exceptions = array('oci8', 'sqlite', 'cubrid','oci10');
 
 		if (in_array($this->dbdriver, $driver_version_exceptions))
 		{
@@ -382,8 +382,19 @@ class CI_DB_driver {
 			$this->stmt_id		= FALSE;
 		}
 
-		// oci8 vars must be set before calling this
-		$RES->num_rows	= $RES->num_rows();
+        if( $this->dbdriver == 'sqlrelay' || $this->dbdriver == 'oci10' ) 
+        {
+
+            $RES->stmt_id    = $this->stmt_id ;
+            $RES->curs_id    = $this->curs_id ;
+            $RES->limit_used = $this->limit_used ;
+        } 
+        else 
+        {
+
+            // oci8 vars must be set before calling this
+            $RES->num_rows	= $RES->num_rows();
+        }
 
 		// Is query caching enabled?  If so, we'll serialize the
 		// result object and save it to a cache file.

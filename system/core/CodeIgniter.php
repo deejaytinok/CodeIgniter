@@ -239,6 +239,13 @@
 		require APPPATH.'core/'.$CFG->config['subclass_prefix'].'Controller.php';
 	}
 
+/*
+ * ------------------------------------------------------
+ *  Is there a "pre_controller" hook?
+ * ------------------------------------------------------
+ */
+	$EXT->_call_hook('pre_controller');
+
 	// Load the local application controller
 	// Note: The Router class automatically validates the controller path using the router->_validate_request().
 	// If this include fails it means that the default controller in the Routes.php file is not resolving to something valid.
@@ -289,13 +296,6 @@
 			show_404("{$class}/{$method}");
 		}
 	}
-
-/*
- * ------------------------------------------------------
- *  Is there a "pre_controller" hook?
- * ------------------------------------------------------
- */
-	$EXT->_call_hook('pre_controller');
 
 /*
  * ------------------------------------------------------
