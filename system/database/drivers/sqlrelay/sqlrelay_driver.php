@@ -145,6 +145,17 @@ class CI_DB_sqlrelay_driver extends CI_DB {
      */
     private $_bgetNullsAsNulls = false;
 
+	/**
+	 * The syntax to count rows is slightly different across different
+	 * database engines, so this string appears in each driver and is
+	 * used for the count_all() and count_all_results() functions.
+	 */
+	var $_count_string = "SELECT COUNT(1) AS ";
+	var $_random_keyword = ' ASC'; // not currently supported
+
+	// The character used for excaping
+	var $_escape_char = '';
+
     /**
      * Constructor
      *
@@ -554,6 +565,7 @@ class CI_DB_sqlrelay_driver extends CI_DB {
     				. PHP_EOL . " dbdriver : " . $this->dbdriver
     				. PHP_EOL . " dbprefix : " . $this->dbprefix
     				. PHP_EOL . " port     : " . $this->port
+                    . PHP_EOL . " Binds    : " . var_export( $this->aInputBinds, true )
                 );
 //                return $this->display_error('db_invalid_query', $this->_sQuery);
                 return $this->display_error(
@@ -1066,6 +1078,7 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 				if ( class_exists('CI_DB_sqlrelay_result')) {
 				
 	        	    $oResult = new CI_DB_sqlrelay_result();
+                    $oResult->active_r = $this->active_r ;
 	        	    $oResult->curs_id = $sFunction($this->curs_id, $sBind);
 	
 	        	    $oResult->conn_id = $this->conn_id;
@@ -1495,15 +1508,157 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	}
 	
 
-	function _insert($table, $keys, $values) {
-	
-	   return false;
-	}
-	
-
     function _db_set_charset( $sCharset, $sExtraData ) {
 
         return true ;
     }
+
+    /**
+	 * Escape the SQL Identifiers
+	 *
+	 * This function escapes column and table names
+	 *
+	 * @access	private
+	 * @param	string
+	 * @return	string
+	 */
+	function _escape_identifiers($item)
+	{
+		if ($this->_escape_char == '')
+		{
+			return $item;
+		}
+
+		foreach ($this->_reserved_identifiers as $id)
+		{
+			if (strpos($item, '.'.$id) !== FALSE)
+			{
+				$str = $this->_escape_char. str_replace('.', $this->_escape_char.'.', $item);
+
+				// remove duplicates if the user already included the escape
+				return preg_replace('/['.$this->_escape_char.']+/', $this->_escape_char, $str);
+			}
+		}
+
+		if (strpos($item, '.') !== FALSE)
+		{
+			$str = $this->_escape_char.str_replace('.', $this->_escape_char.'.'.$this->_escape_char, $item).$this->_escape_char;
+		}
+		else
+		{
+			$str = $this->_escape_char.$item.$this->_escape_char;
+		}
+
+		// remove duplicates if the user already included the escape
+		return preg_replace('/['.$this->_escape_char.']+/', $this->_escape_char, $str);
+	}
+
+	// --------------------------------------------------------------------
+
+    /**
+	 * From Tables
+	 *
+	 * This function implicitly groups FROM tables so there is no confusion
+	 * about operator precedence in harmony with SQL standards
+	 *
+	 * @access	public
+	 * @param	type
+	 * @return	type
+	 */
+	function _from_tables($tables)
+	{
+		if ( ! is_array($tables))
+		{
+			$tables = array($tables);
+		}
+
+		return implode(', ', $tables) ;
+	}
+
+	// --------------------------------------------------------------------
+    
+    /**
+	 * Update statement
+	 *
+	 * Generates a platform-specific update string from the supplied data
+	 *
+	 * @access	public
+	 * @param	string	the table name
+	 * @param	array	the update data
+	 * @param	array	the where clause
+	 * @param	array	the orderby clause
+	 * @param	array	the limit clause
+	 * @return	string
+	 */
+	function _update($table, $values, $where, $orderby = array(), $limit = FALSE)
+	{
+		foreach ($values as $key => $val)
+		{
+			$valstr[] = $key . ' = ' . $val;
+		}
+
+		$limit = ( ! $limit) ? '' : ' LIMIT '.$limit;
+
+		$orderby = (count($orderby) >= 1)?' ORDER BY '.implode(", ", $orderby):'';
+
+		$sql = "UPDATE ".$table." SET ".implode(', ', $valstr);
+
+		$sql .= ($where != '' AND count($where) >=1) ? " WHERE ".implode(" ", $where) : '';
+
+		$sql .= $orderby.$limit;
+
+		return $sql;
+	}
+
+	// --------------------------------------------------------------------
+    
+    /**
+	 * Insert statement
+	 *
+	 * Generates a platform-specific insert string from the supplied data
+	 *
+	 * @access	public
+	 * @param	string	the table name
+	 * @param	array	the insert keys
+	 * @param	array	the insert values
+	 * @return	string
+	 */
+	function _insert($table, $keys, $values)
+	{
+		return "INSERT INTO ".$table." (".implode(', ', $keys).") VALUES (".implode(', ', $values).")";
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Limit string
+	 *
+	 * Generates a platform-specific LIMIT clause
+	 *
+	 * @access	public
+	 * @param	string	the sql query string
+	 * @param	integer	the number of rows to limit the query to
+	 * @param	integer	the offset value
+	 * @return	string
+	 */
+	function _limit($sql, $limit, $offset)
+	{
+
+		$limit = $offset + $limit;
+		$newsql = "SELECT * FROM (select inner_query.*, rownum rnum FROM ($sql) inner_query WHERE rownum < $limit)";
+
+		if ($offset != 0)
+		{
+			$newsql .= " WHERE rnum >= $offset";
+		}
+
+		// remember that we used limits
+		$this->limit_used = TRUE;
+
+		return $newsql;
+	}
+
+	// --------------------------------------------------------------------
+
 }
 ?>

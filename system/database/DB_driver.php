@@ -373,6 +373,7 @@ class CI_DB_driver {
 		$RES			= new $driver();
 		$RES->conn_id	= $this->conn_id;
 		$RES->result_id	= $this->result_id;
+		$RES->active_r  = $this->active_r ; 
 
 		if ($this->dbdriver == 'oci8')
 		{

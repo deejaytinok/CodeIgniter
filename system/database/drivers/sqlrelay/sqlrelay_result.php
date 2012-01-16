@@ -93,7 +93,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
 	    $this->curs_id = $rCursor;
 	}
 
-
 	/**
 	 * Number of rows in the result set
 	 *
@@ -110,7 +109,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
         return sqlrcur_totalRows($this->curs_id);
     }
 
-
 	/**
 	 * Number of fields in the result set
 	 *
@@ -126,7 +124,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
 		}
 		return $count ;
 	}
-
 
 	/**
 	 * Field data
@@ -186,7 +183,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
         return $aReturn;
 	}
 
-
 	/**
 	 * Returns the result set as an object
 	 *
@@ -199,6 +195,7 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
 
 	        $row = array();
             $res = $this->_fetch_array();
+
             if ($res != false) {
 
     			$obj = new stdClass();
@@ -227,7 +224,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
             return false;
 	    }
 	}
-
 
 	/**
 	 * Returns the result set as an index key array
@@ -268,7 +264,15 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
      * @access  public
      * @return  array
      */
-	function result($sType = 'row', $iNbRow = 0) {
+	function result($sType = null, $iNbRow = 0) {
+
+        if( $sType == null && false === $this->active_r ) {
+
+            $sType = 'row' ;
+        } else if( $sType ==  null && true === $this->active_r ) {
+
+            $sType = 'object' ;
+        }
 
 	    if ( $sType != 'row' && $sType != 'array' && $sType != 'object' ) {
 
@@ -285,7 +289,13 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
                 );
                 return $this->display_error('db_wrong_parameter', $sType);
             }
-            return false;
+            if( false === $this->active_r ) {
+
+                return false;
+            } else {
+
+                return array( ) ;
+            }
 	    }
 	    $sFunction = "_fetch_$sType";
 	    $sArray    = "result_$sType";
@@ -300,25 +310,33 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
         $iNbRowTemp        = 0;
         $iNbFirstResult    = $this->num_rows();
         while ( $this->current_row < $iNbFirstResult && $iNbRowTemp <= $iNbRow ) {
+
             array_push($this->$sArray, $this->$sFunction());
             if ( $iNbRow > 0 ) {
+
                 $iNbRowTemp++;
             }
         }
         while ( ! sqlrcur_endOfResultSet($this->curs_id) && $iNbRowTemp <= $iNbRow ) {
+
             array_push($this->$sArray, $this->$sFunction());
             if ( $iNbRow > 0 ) {
+
                 $iNbRowTemp++;
             }
         }
         if (count($this->$sReturn) == 0 ) {
 
-            return false;
-        }
+            if( false === $this->active_r ) {
 
+                return false;
+            } else {
+
+                return array( ) ;
+            }
+        }
         return $this->$sReturn;
 	}
-
 
     /**
      * Query result.  "array" version.
@@ -331,7 +349,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
 	    return $this->result('array');
 	}
 
-
     /**
      * Query result.  "row" version.
      *
@@ -340,9 +357,8 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
      */
 	function result_row() {
 
-	    return $this->result();
+	    return $this->result( 'row' ) ;
 	}
-
 
     /**
      * Query result.  "object" version.
@@ -354,7 +370,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
 
 	    return $this->result('object');
 	}
-
 
 	/**
 	 * Returns a string with value of the specified row and column
@@ -368,7 +383,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
 
 	    return sqlrcur_getField($this->curs_id, $iRow, $iCol);
 	}
-
 
 	/**
 	 * Returns an array with the datas of the row given in argument
@@ -385,7 +399,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
 	    return $this->$sFunction();
 	}
 
-
 	/**
 	 * Returns the array of the column names of the current return set
 	 *
@@ -396,7 +409,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
 
 	    return sqlrcur_getColumnNames($this->curs_id);
 	}
-
 
 	/**
 	 * Returns the name of the specified column
@@ -441,7 +453,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
 	    }
 	}
 
-
 	/**
 	 * Returns the length of the specified column
 	 *
@@ -472,7 +483,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
             return false;
 	    }
 	}
-
 
 	/**
 	 * Returns the precision of the specified column
@@ -505,7 +515,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
 	    }
 	}
 
-
 	/**
 	 * Returns the scale of the specified column
 	 *
@@ -536,7 +545,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
             return false;
 	    }
 	}
-
 
 	/**
 	 * Returns the length of the longest field in the specified column
@@ -620,7 +628,6 @@ class CI_DB_sqlrelay_result extends CI_DB_result {
 	    }
 	    return ;
 	}
-
 
 	/**
 	 * Display an error message
