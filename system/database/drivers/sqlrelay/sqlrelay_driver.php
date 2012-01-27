@@ -157,6 +157,20 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	var $_escape_char = '';
 
     /**
+     * @desc    AR escape string
+     * @var     mixed  Defaults to " escape '%s' " . 
+     * @access  public
+     */
+    var $_like_escape_str = " escape '%s' " ;
+
+    /**
+     * @desc    AR escape character
+     * @var     mixed  Defaults to '!' . 
+     * @access  public
+     */
+    var $_like_escape_chr = '!' ;
+
+    /**
      * Constructor
      *
      */
@@ -164,19 +178,14 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 
         $this->clean();
         $this->setIsOracle(false);
-
         $this->_iPrefetch = 1000;
-        
         if ( isset( $params['getNullsAsNulls'] ) && true === $params['getNullsAsNulls'] ) {
 
           $this->_bgetNullsAsNulls = true;
         }
-        
         parent::__construct($params);
         //$this->setAutoCommitOn();
     }
-    
-    
     /**
      * Initialize object for binds, ect.
      *
@@ -195,7 +204,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
         $this->_sFileExplainId  = '';
         $this->setPrefetchState(true);
     }
-    
     
     /**
      * Destructor
@@ -276,7 +284,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    }
 	}
     
-    
     /**
      * Swith prefetch wether to use it or not
      *
@@ -289,7 +296,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
             $this->_bPrefetch = $bSwitch ;
     }
 	
-    
 	/**
 	 * Non-persistent database connection
 	 * 
@@ -343,7 +349,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
         return $sConnect;
 	}
 	
-
 	/**
 	 * Persistent database connection
 	 *
@@ -356,7 +361,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 		return false;
 	}
 	
-
 	/**
 	 * Select the database
 	 *
@@ -369,7 +373,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
         return true;
     }
 	
-
 	/**
 	 * Execute the query
 	 *
@@ -443,7 +446,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 		return $iResult;
 	}
 	
-	
 	/**
 	 * Check if query is "executable" (no select *)
 	 *
@@ -460,13 +462,12 @@ class CI_DB_sqlrelay_driver extends CI_DB {
             exit();
 	    }*/
 	    
-	    if ( stristr('update', $sql) || stristr('delete', $sql) ) {
+	    if ( false === $this->active_r && ( stristr('update', $sql) || stristr('delete', $sql) ) ) {
 	        
 	        $this->setAutoCommitOff();
 	    }
 	}
 	
-
 	/**
 	 * Prepare the query 
 	 * Only if Oracle Type
@@ -523,7 +524,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
         }
     }
 	
-	
 	/**
 	 * Allocate a cursor
 	 *
@@ -535,7 +535,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 
 	    return $this->curs_id = sqlrcur_alloc($this->conn_id);
 	}
-    
     
     /**
      * Execute the query
@@ -582,7 +581,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
         return $iResult;
     }
 	
-	
 	/**
 	 * Free the cursor
 	 *
@@ -599,7 +597,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
             unset($this->curs_id);
         }
 	}
-	
 	
 	/**
 	 * Log explain of each query in log files after truncating plan_table
@@ -684,7 +681,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    }
 	}
 	
-	
 	/**
 	 * Parse explain log of this connexion
 	 * And print it to screen
@@ -743,7 +739,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    }
 	}
 	
-
 	/**
 	 * Close DB Connection
 	 *
@@ -762,7 +757,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
         $this->_parseExplain();
 	}
 		
-	
 	/**
 	 * @desc 	Set the debug on for developers
 	 * @since	2007/05/03 => Split debug and explain
@@ -784,7 +778,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 
 	}
 	
-
 	/**
 	 * @desc 	Set the debug on for developers
 	 * @since	2007/05/03 => Split debug and explain
@@ -809,7 +802,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    $this->_bDebugExplain = true;
 	}
 	
-
 	/**
 	 * Escape Table Name
 	 *
@@ -829,7 +821,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 		return $table;
 	}
 	
-
 	/**
 	 * Add a new Input bind to the object
 	 * Warning, not all databases support those functionalities.
@@ -842,14 +833,14 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	 * @return void
 	 */
 	function addInputBind( $sBind, $value, $shPrecision = null, $shScale = null, $sType = null) {
-	    
+
+	    $sBind = str_replace( ':','',$sBind ) ;
 	    $this->aInputBinds[] = array(  'VARIABLE'      => $sBind,
 	                                   'VALUE'         => $value,
 	                                   'PRECISION'     => $shPrecision,
 	                                   'SCALE'         => $shScale,
 									   'TYPE'		   => $sType );
 	}
-	
 	
 	/**
 	 * Add a new Output bind to the object
@@ -864,6 +855,7 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	 */
 	function addOutputBind( $sType, $sBind, $value = null, $shPrecision = null, $shScale = null) {
 	    
+        $sBind = str_replace( ':', '', $sBind ) ;
 	    $this->aOutputBinds[] = array( 'TYPE'          => $sType,
 	                                   'VARIABLE'      => $sBind,
 	                                   'VALUE'         => $value,
@@ -871,7 +863,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	                                   'SCALE'         => $shScale  );
 	}
 	
-
 	/**
 	 * Add a substituion to the object
 	 * Warning, not all databases support those functionalities.
@@ -890,7 +881,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	                                       'PRECISION'     => $shPrecision,
 	                                       'SCALE'         => $shScale  );
 	}
-	
 	
 	/**
 	 * Clear all bind variables
@@ -918,7 +908,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    }
 	}
 	
-	
 	/**
 	 * Count all bind variables
 	 * Warning, not all databases support those functionalities.
@@ -936,7 +925,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	        return false;
 	    }
 	}
-	
 	
 	/**
 	 * Set an input bind
@@ -1000,7 +988,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    }
 	}
 	
-	
 	/**
 	 * Set an output bind
 	 * Warning, not all databases support those functionalities.
@@ -1029,7 +1016,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    }
 	}
 	
-	
 	/**
 	 * Set output binds
 	 * Warning, not all databases support those functionalities.
@@ -1056,7 +1042,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	        return false;
 	    }
 	}
-	
 	
 	/**
 	 * Set an output bind
@@ -1107,7 +1092,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    }
 	}
 	
-	
 	/**
 	 * Set a substitution
 	 * Warning, not all databases support those functionalities.
@@ -1147,7 +1131,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    }
 	}
 	
-	
 	/**
 	 * Set autoCommit On
 	 * Warning, not all databases support those functionalities.
@@ -1165,9 +1148,7 @@ class CI_DB_sqlrelay_driver extends CI_DB {
     	    }
 	        return false;
 	    }
-	    
 	}
-	
 	
 	/**
 	 * Set autoCommit Off
@@ -1185,7 +1166,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
         return false;
 	    
 	}
-	
 	
 	/**
 	 * Commit the previous queries
@@ -1223,7 +1203,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	        return false;
 	    }
 	}
-	
 	
 	/**
 	 * Rollback the previous queries
@@ -1286,7 +1265,8 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 		// even if the queries produce a successful result.
 		$this->_trans_failure = ($test_mode === TRUE) ? TRUE : FALSE;
 		
-		$this->_commit = OCI_DEFAULT;
+		//$this->_commit = OCI_DEFAULT;
+        $this->setAutoCommitOff( ) ;
 		return TRUE;
 	}
 
@@ -1311,7 +1291,7 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 		}
 
 		$ret = sqlrcon_commit($this->conn_id);
-		$this->_commit = OCI_COMMIT_ON_SUCCESS;
+        $this->setAutoCommitOn(  ) ;
 		return $ret;
 	}
 
@@ -1336,11 +1316,10 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 		}
 
 		$ret = sqlrcon_rollback($this->conn_id);
-		$this->_commit = OCI_COMMIT_ON_SUCCESS;
+        $this->setAutoCommitOn(  ) ;
 		return $ret;
 	}
 
-		
 	/**
 	 * Terminates the session
 	 * Warning, not all databases support those functionalities.
@@ -1356,7 +1335,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    }
 	}
 	
-	
     /**
      * Escape String
      *
@@ -1370,7 +1348,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
         return str_replace("'", "''", $str);
     }
     
-	
 	/**
 	 * Suspend SQL Relay Session and Result Set in order to be resume later.
 	 * 
@@ -1386,7 +1363,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
         $aReturn['iSocketId']    = sqlrcon_getConnectionSocket($this->conn_id);
         return $aReturn;
 	}
-	
 	
 	/**
 	 * Resume a previous Session and ResultSet
@@ -1418,7 +1394,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
         }
 	}
 	
-
 	/**
 	 * Tells the server to send or not to send any column info (names, types, sizes). 
 	 *
@@ -1437,7 +1412,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    }
 	}
 	
-	    
     /**
 	 * Tells the server to send any column info (names, types, sizes). 
 	 *
@@ -1460,7 +1434,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    
 	}
 	
-	
 	/**
 	 * Tells the server not to send any column info (names, types, sizes). 
 	 *
@@ -1479,7 +1452,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    
 	}
 	
-	
 	/**
 	 * Returns the number of rows that were updated, inserted or deleted by the query. 
 	 * Not all databases support this call. 
@@ -1494,7 +1466,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    return sqlrcur_affectedRows($this->curs_id);
 	}
 	
-	
 	/**
 	 * If a query failed and generated an error, the error message is available here. 
 	 * If the query succeeded then this function returns false
@@ -1507,7 +1478,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	    return sqlrcur_errorMessage($this->curs_id);
 	}
 	
-
     function _db_set_charset( $sCharset, $sExtraData ) {
 
         return true ;
@@ -1554,7 +1524,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	}
 
 	// --------------------------------------------------------------------
-
     /**
 	 * From Tables
 	 *
@@ -1576,7 +1545,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	}
 
 	// --------------------------------------------------------------------
-    
     /**
 	 * Update statement
 	 *
@@ -1611,7 +1579,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	}
 
 	// --------------------------------------------------------------------
-    
     /**
 	 * Insert statement
 	 *
@@ -1629,7 +1596,6 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	}
 
 	// --------------------------------------------------------------------
-
 	/**
 	 * Limit string
 	 *
@@ -1659,6 +1625,5 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 	}
 
 	// --------------------------------------------------------------------
-
 }
 ?>
