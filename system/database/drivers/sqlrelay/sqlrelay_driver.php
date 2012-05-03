@@ -569,7 +569,8 @@ class CI_DB_sqlrelay_driver extends CI_DB {
 //                return $this->display_error('db_invalid_query', $this->_sQuery);
                 return $this->display_error(
 										array(
-												'Error Number: '.$this->_sQuery,
+                                                'Query : ' . $this->_sQuery,
+                                                'Binds: ' . var_export( $this->aInputBinds, true ),
 												$this->_error_message()
 											));
             }
